@@ -4,19 +4,25 @@ import { PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { handleApi } from '@/api-helpers/axios-api-instance';
 import { Integration } from '@/constants/integrations';
 import { StateFetchConfig } from '@/types/redux';
-import { BaseUser, DBUserRow, OrgSettings } from '@/types/resources';
+import {
+  BaseUser,
+  DBUserRow,
+  OrgDefaultSyncDaysSettings
+} from '@/types/resources';
 import { addFetchCasesToReducer } from '@/utils/redux';
 
 type State = StateFetchConfig<{
   admins: BaseUser[];
   members: Record<ID, User>;
   syncAlertsAsIncidents: boolean;
+  defaultSyncDays: number;
 }>;
 
 const initialState: State = {
   admins: [],
   members: {},
-  syncAlertsAsIncidents: false
+  syncAlertsAsIncidents: false,
+  defaultSyncDays: null
 };
 
 export const orgSlice = createSlice({
@@ -75,11 +81,18 @@ export const orgSlice = createSlice({
     );
     addFetchCasesToReducer(
       builder,
-      getOrgAlertSettings,
-      'syncAlertsAsIncidents',
+      getDefaultSyncDaysSettings,
+      'defaultSyncDays',
       (state, action) => {
-        state.syncAlertsAsIncidents =
-          action.payload.should_sync_alerts_as_incidents;
+        state.defaultSyncDays = action.payload;
+      }
+    );
+    addFetchCasesToReducer(
+      builder,
+      updateDefaultSyncDaysSettings,
+      'defaultSyncDays',
+      (state, action) => {
+        state.defaultSyncDays = action.payload;
       }
     );
   }
@@ -165,32 +178,38 @@ export const restoreMember = createAsyncThunk(
   }
 );
 
-export const getOrgAlertSettings = createAsyncThunk(
-  'org/orgSettings',
-  async (params: { userId: ID; orgId: ID }) => {
-    return await handleApi<OrgSettings>(
-      `/internal/${params.orgId}/alerts_as_incidents`,
-      {
-        params: {
-          user_id: params.userId
+export const getDefaultSyncDaysSettings = createAsyncThunk(
+  'org/getDefaultSyncDaysSettings',
+  async (params: { orgId: ID }) => {
+    return (
+      await handleApi<OrgDefaultSyncDaysSettings>(
+        `/internal/${params.orgId}/settings`,
+        {
+          params: {
+            setting_type: 'DEFAULT_SYNC_DAYS_SETTING'
+          }
         }
-      }
-    );
+      )
+    ).default_sync_days;
   }
 );
 
-export const updatedOrgAlertSettings = createAsyncThunk(
-  'org/orgSettings',
-  async (params: { userId: ID; orgId: ID; updatedSetting: boolean }) => {
-    return await handleApi<OrgSettings>(
-      `/internal/${params.orgId}/alerts_as_incidents`,
-      {
-        data: {
-          updated_setting: params.updatedSetting,
-          user_id: params.userId
-        },
-        method: 'PUT'
-      }
-    );
+export const updateDefaultSyncDaysSettings = createAsyncThunk(
+  'org/updateDefaultSyncDaysSettings',
+  async (params: { orgId: ID; defaultSyncDays: number }) => {
+    return (
+      await handleApi<OrgDefaultSyncDaysSettings>(
+        `/internal/${params.orgId}/settings`,
+        {
+          data: {
+            setting_type: 'DEFAULT_SYNC_DAYS_SETTING',
+            setting_data: {
+              default_sync_days: params.defaultSyncDays
+            }
+          },
+          method: 'PUT'
+        }
+      )
+    ).default_sync_days;
   }
 );

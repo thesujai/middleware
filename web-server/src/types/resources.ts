@@ -664,15 +664,15 @@ export enum AiSummarySource {
   PRS_ANALYSIS = 'PRS_ANALYSIS'
 }
 
-export type OrgSettings = {
-  should_sync_alerts_as_incidents: boolean;
+export type OrgDefaultSyncDaysSettings = {
+  default_sync_days: number;
 };
 
-export type OrgSettingsApiResponse = {
+export type OrgSettingsApiResponse<T extends {} = {}> = {
   created_at: DateString;
   updated_at: DateString;
   org_id: ID;
-  setting: OrgSettings;
+  setting: T;
 };
 
 export type IncidentProviderAssignedTeam = {

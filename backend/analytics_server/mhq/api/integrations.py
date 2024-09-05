@@ -1,7 +1,7 @@
 from typing import List
 from flask import Blueprint, jsonify
 from github import GithubException
-from voluptuous import Schema, Optional, Coerce, Range, All, Required
+from voluptuous import Schema, Optional, Coerce, Range, All
 
 from mhq.exapi.models.gitlab import GitlabRepo
 from mhq.api.request_utils import queryschema
@@ -160,7 +160,7 @@ def get_gitlab_orgs(org_id: str):
                 "name": group.get("name"),
                 "avatar_url": group.get("avatar_url"),
                 "web_url": group.get("web_url"),
-                "internal_id": group.get("id"),
+                "provider_org_id": group.get("id"),
             }
             for group in groups
         ]
